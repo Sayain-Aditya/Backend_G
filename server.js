@@ -7,7 +7,7 @@ dotenv.config();
 const app = express();
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://crm-two-beige.vercel.app",
+  "https://grocery-bay.vercel.app",
   "https://backend-g-sigma.vercel.app",
 ];
 app.use(
