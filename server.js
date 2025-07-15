@@ -5,8 +5,26 @@ const cors = require('cors');
 
 dotenv.config();
 const app = express();
-app.use(cors());
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://crm-two-beige.vercel.app",
+  "https://backend-g-sigma.vercel.app",
+];
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+    optionsSuccessStatus: 204,
+  })
+);
 app.use(express.json());
+connectDB();
 
 // Routes
 app.use('/api/users', require('./src/routes/userRoutes'));
