@@ -36,7 +36,7 @@ mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/grocery')
   .catch((err) => console.error('MongoDB connection error:', err));
 
 // For local development
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 }
