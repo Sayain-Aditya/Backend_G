@@ -23,8 +23,8 @@ app.use(
     optionsSuccessStatus: 204,
   })
 );
+
 app.use(express.json());
-connectDB();
 
 // Routes
 app.use('/api/users', require('./src/routes/userRoutes'));
