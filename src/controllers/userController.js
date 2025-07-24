@@ -75,43 +75,45 @@ exports.getUserProfile = async (req, res) => {
     res.status(500).json({ message: "Server error", error: err.message });
   }
 };
-
+// ✅ Update user profile
 // ✅ Update user profile
 exports.updateUser = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
-
-    const user = await User.findById(req.user.id);
-    if (!user)
-      return res.status(400).json({ message: "User not found" });
-
-    if (name) user.name = name;
-
-    if (email && email !== user.email) {
-      const emailExists = await User.findOne({ email });
-      if (emailExists)
-        return res.status(400).json({ message: "Email already in use" });
-
-      user.email = email;
+    console.log("req.user:", req.user);
+    console.log("req.body:", req.body);
+    
+    if (!req.user) {
+      return res.status(401).json({ message: "User not authenticated" });
     }
 
-    if (password) {
-      const hashedPassword = await bcrypt.hash(password, 10);
-      user.password = hashedPassword;
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const { name, password } = req.body;
+    
+    if (name) user.name = name;
+    if (password && password.trim() !== "") {
+      user.password = await bcrypt.hash(password, 10);
     }
 
     await user.save();
 
-    res.json({
+    res.json({ 
       message: "User updated successfully",
       user: {
         id: user._id,
         name: user.name,
         email: user.email,
-        role: user.role,
-      },
+        role: user.role
+      }
     });
   } catch (err) {
+    console.error("Update user error:", err);
     res.status(500).json({ message: "Server error", error: err.message });
   }
 };
+
+
+
