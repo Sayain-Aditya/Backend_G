@@ -3,9 +3,18 @@ const {
   registerUser,
   loginUser,
   updateUser,
-  getUserProfile
+  getUserProfile,
+  getAdminStats
 } = require("../controllers/userController");
 const { protect } = require('../middleware/authMiddleware');
+
+// Admin middleware
+const adminOnly = (req, res, next) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ message: 'Access denied. Admin only.' });
+  }
+  next();
+};
 
 const router = express.Router();
 
@@ -16,5 +25,6 @@ router.post("/login", loginUser);
 // ✅ PROTECTED ROUTES
 router.put("/update", protect, updateUser);
 router.get("/me", protect, getUserProfile);
+router.get('/stats', protect, adminOnly, getAdminStats);
 
 module.exports = router;
