@@ -1,4 +1,6 @@
 const Order = require('../models/order');
+const User = require('../models/user');
+const { sendInvoiceEmail } = require('../services/emailService');
 
 exports.getAllOrders = async (req, res) => {
   try {
@@ -24,7 +26,7 @@ exports.getMyOrders = async (req, res) => {
 
 exports.placeOrder = async (req, res) => {
   try {
-    const { items, total, address } = req.body;
+    const { items, total, address, paymentMethod } = req.body;
 
     if (!address || !address.fullName || !address.street || !address.city) {
       return res.status(400).json({ message: "Incomplete address details." });
@@ -35,10 +37,32 @@ exports.placeOrder = async (req, res) => {
       items,
       total,
       address,
+      paymentMethod: paymentMethod || 'COD',
     });
 
-    await order.save();
-    res.status(201).json({ message: "Order placed", order });
+    const savedOrder = await order.save();
+    
+    // Populate order with product details for email
+    const populatedOrder = await Order.findById(savedOrder._id)
+      .populate('items.product', 'name price')
+      .populate('user', 'email');
+    
+    // Send invoice email
+    console.log('Order saved, attempting to send email...');
+    console.log('User email:', populatedOrder.user?.email);
+    
+    if (populatedOrder.user?.email) {
+      try {
+        await sendInvoiceEmail(populatedOrder, populatedOrder.user.email);
+        console.log('Email service called successfully');
+      } catch (emailError) {
+        console.error('Email sending failed:', emailError);
+      }
+    } else {
+      console.log('No user email found, skipping email');
+    }
+    
+    res.status(201).json({ message: "Order placed", order: savedOrder });
   } catch (err) {
     res.status(500).json({ message: "Server error", error: err.message });
   }

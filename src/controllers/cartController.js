@@ -5,8 +5,17 @@ const Product = require("../models/products");
 exports.getCart = async (req, res) => {
     try {
         const user = await User.findById(req.user.id).populate('cart.product');
-        res.json(user.cart);
+        
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        
+        // Filter out items with null products (deleted products)
+        const validCartItems = user.cart.filter(item => item.product !== null);
+        
+        res.json(validCartItems);
     } catch (err) {
+        console.error('Cart fetch error:', err);
         res.status(500).json({ message: "Server error", error: err.message });
     }
 };

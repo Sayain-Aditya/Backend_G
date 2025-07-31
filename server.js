@@ -35,6 +35,7 @@ app.use('/api/users', require('./src/routes/userRoutes'));
 app.use('/api/products', require('./src/routes/productRoutes'));
 app.use('/api/cart', require('./src/routes/cartRoutes'));
 app.use('/api/orders', require('./src/routes/orderRoutes'));
+app.use('/api/test', require('./src/routes/testRoutes'));
 
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/grocery')
