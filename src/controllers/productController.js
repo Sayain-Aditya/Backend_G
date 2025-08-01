@@ -114,3 +114,24 @@ exports.deleteProduct = async (req, res) => {
     });
   }
 };
+
+// ✅ Server-side product search
+exports.searchProducts = async (req, res) => {
+  try {
+    const { query } = req.query;
+    if (!query) {
+      return res.status(400).json({ message: "Missing search query" });
+    }
+    const regex = new RegExp(query, "i");
+    const results = await Product.find({
+      $or: [
+        { name: regex },
+        { category: regex },
+        { description: regex },
+      ],
+    });
+    res.json({ results });
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};

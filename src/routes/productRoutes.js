@@ -1,10 +1,12 @@
 const express = require('express');
-const { addProduct, getAllProducts, getProductById, updateProduct, deleteProduct } = require('../controllers/productController');
+const { addProduct, getAllProducts, getProductById, updateProduct, deleteProduct, searchProducts } = require('../controllers/productController');
 const {protect} = require('../middleware/authMiddleware');
 
-
-
 const router = express.Router();
+
+
+// Product search route
+router.get('/search', searchProducts);
 
 // Add a new product
 router.post('/add', addProduct);

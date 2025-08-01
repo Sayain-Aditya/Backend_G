@@ -1,6 +1,6 @@
 const express = require('express');
 
-const { placeOrder, getAllOrders, getMyOrders, updateOrderStatus } = require('../controllers/orderController');
+const { placeOrder, getAllOrders, getMyOrders, updateOrderStatus, searchOrders } = require('../controllers/orderController');
 const { protect } = require('../middleware/authMiddleware');
 
 const router = express.Router();
@@ -8,6 +8,10 @@ const router = express.Router();
 // @route   POST /api/orders
 // @desc    Place a new order
 // @access  Private
+
+
+// Order search route
+router.get('/search', protect, searchOrders);
 
 // Place a new order
 router.post('/', protect, placeOrder);

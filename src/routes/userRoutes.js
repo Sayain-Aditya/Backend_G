@@ -4,7 +4,8 @@ const {
   loginUser,
   updateUser,
   getUserProfile,
-  getAdminStats
+  getAdminStats,
+  search
 } = require("../controllers/userController");
 const { protect } = require('../middleware/authMiddleware');
 
@@ -25,6 +26,10 @@ router.post("/login", loginUser);
 // ✅ PROTECTED ROUTES
 router.put("/update", protect, updateUser);
 router.get("/me", protect, getUserProfile);
+
+// ✅ SEARCH ROUTE
+router.get('/search', protect, search);
+
 router.get('/stats', protect, adminOnly, getAdminStats);
 
 module.exports = router;

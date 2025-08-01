@@ -1,3 +1,51 @@
+// ✅ Server-side search for users, products, and orders
+exports.search = async (req, res) => {
+  try {
+    const { type, query } = req.query;
+    let results = [];
+    if (!type || !query) {
+      return res.status(400).json({ message: "Missing search type or query" });
+    }
+    const regex = new RegExp(query, "i");
+    switch (type) {
+      case "user":
+        results = await User.find({
+          $or: [
+            { name: regex },
+            { email: regex },
+            { "address.fullName": regex },
+            { "address.city": regex },
+            { "address.state": regex },
+          ],
+        }).select("-password");
+        break;
+      case "product":
+        results = await Product.find({
+          $or: [
+            { name: regex },
+            { category: regex },
+            { description: regex },
+          ],
+        });
+        break;
+      case "order":
+        results = await Order.find({
+          $or: [
+            { status: regex },
+            { "address.fullName": regex },
+            { "address.city": regex },
+            { "address.state": regex },
+          ],
+        }).populate("user", "name email").populate("items.product", "name price");
+        break;
+      default:
+        return res.status(400).json({ message: "Invalid search type" });
+    }
+    res.json({ results });
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
 require("dotenv").config();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");

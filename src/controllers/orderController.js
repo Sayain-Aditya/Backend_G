@@ -82,3 +82,25 @@ exports.updateOrderStatus = async (req, res) => {
     res.status(500).json({ message: "Server error", error: err.message });
   }
 };
+
+// ✅ Server-side order search
+exports.searchOrders = async (req, res) => {
+  try {
+    const { query } = req.query;
+    if (!query) {
+      return res.status(400).json({ message: "Missing search query" });
+    }
+    const regex = new RegExp(query, "i");
+    const results = await Order.find({
+      $or: [
+        { status: regex },
+        { "address.fullName": regex },
+        { "address.city": regex },
+        { "address.state": regex },
+      ],
+    }).populate("user", "name email").populate("items.product", "name price");
+    res.json({ results });
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
