@@ -1,7 +1,5 @@
 const nodemailer = require('nodemailer');
 const PDFDocument = require('pdfkit');
-const fs = require('fs');
-const path = require('path');
 
 // Create transporter
 const transporter = nodemailer.createTransport({
@@ -21,20 +19,18 @@ transporter.verify((error, success) => {
   }
 });
 
-// Generate PDF invoice
+// Generate PDF invoice in memory (Vercel-compatible)
 const generateInvoicePDF = (order) => {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument();
-    const filename = `invoice-${order._id}.pdf`;
-    const filepath = path.join(__dirname, '../temp', filename);
+    const buffers = [];
 
-    // Ensure temp directory exists
-    const tempDir = path.dirname(filepath);
-    if (!fs.existsSync(tempDir)) {
-      fs.mkdirSync(tempDir, { recursive: true });
-    }
-
-    doc.pipe(fs.createWriteStream(filepath));
+    doc.on('data', buffers.push.bind(buffers));
+    doc.on('end', () => {
+      const pdfBuffer = Buffer.concat(buffers);
+      resolve(pdfBuffer);
+    });
+    doc.on('error', reject);
 
     // Header
     doc.fontSize(20).text('FreshMart Invoice', 50, 50);
@@ -64,9 +60,6 @@ const generateInvoicePDF = (order) => {
     doc.text(`Total: ₹${order.total.toFixed(2)}`, 400, yPosition + 20);
 
     doc.end();
-
-    doc.on('end', () => resolve(filepath));
-    doc.on('error', reject);
   });
 };
 
@@ -80,10 +73,10 @@ const sendInvoiceEmail = async (order, userEmail) => {
   });
   
   try {
-    // Generate PDF first
-    console.log('Generating PDF...');
-    const pdfPath = await generateInvoicePDF(order);
-    console.log('PDF generated successfully at:', pdfPath);
+    // Generate PDF buffer
+    console.log('Generating PDF buffer...');
+    const pdfBuffer = await generateInvoicePDF(order);
+    console.log('PDF buffer generated successfully, size:', pdfBuffer.length);
 
     const mailOptions = {
       from: process.env.EMAIL_USER,
@@ -103,7 +96,8 @@ const sendInvoiceEmail = async (order, userEmail) => {
       attachments: [
         {
           filename: `invoice-${order._id}.pdf`,
-          path: pdfPath
+          content: pdfBuffer,
+          contentType: 'application/pdf'
         }
       ]
     };
@@ -117,12 +111,6 @@ const sendInvoiceEmail = async (order, userEmail) => {
     const result = await transporter.sendMail(mailOptions);
     console.log('✅ EMAIL SENT SUCCESSFULLY!');
     console.log('Message ID:', result.messageId);
-    
-    // Clean up temp file
-    if (fs.existsSync(pdfPath)) {
-      fs.unlinkSync(pdfPath);
-      console.log('PDF file cleaned up');
-    }
     
   } catch (error) {
     console.error('❌ EMAIL FAILED!');
