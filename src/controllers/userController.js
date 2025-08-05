@@ -79,26 +79,47 @@ exports.registerUser = async (req, res) => {
   }
 };
 
-// ✅ Login User
+// ✅ Enhanced Login User
 exports.loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
-    if (!user)
-      return res.status(400).json({ message: "User not found" });
+    // Input validation
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password are required" });
+    }
 
+    if (!email.includes('@')) {
+      return res.status(400).json({ message: "Please enter a valid email address" });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ message: "Password must be at least 6 characters" });
+    }
+
+    // Find user with timeout protection
+    const user = await User.findOne({ email }).maxTimeMS(10000);
+    if (!user) {
+      return res.status(401).json({ message: "Invalid email or password" });
+    }
+
+    // Verify password
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch)
-      return res.status(400).json({ message: "Invalid credentials" });
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid email or password" });
+    }
 
+    // Generate JWT token
     const token = jwt.sign(
-      { id: user._id, role: user.role },
+      { id: user._id, role: user.role, email: user.email },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
 
+    // Return success response
     res.json({
+      success: true,
+      message: "Login successful",
       token,
       user: {
         id: user._id,
@@ -108,7 +129,11 @@ exports.loginUser = async (req, res) => {
       },
     });
   } catch (err) {
-    res.status(500).json({ message: "Server error", error: err.message });
+    console.error('Login error:', err);
+    if (err.name === 'MongoTimeoutError') {
+      return res.status(503).json({ message: "Database connection timeout. Please try again." });
+    }
+    res.status(500).json({ message: "Server error. Please try again later." });
   }
 };
 
