@@ -7,17 +7,28 @@ dotenv.config();
 const app = express();
 const allowedOrigins = [
   "http://localhost:5173",
+  "http://localhost:3000",
   "https://grocery-bay.vercel.app",
-  "https://backend-g-sigma.vercel.app",
+  "https://backend-g-sigma.vercel.app"
 ];
+
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
+      // Allow requests with no origin (mobile apps, curl, etc.)
+      if (!origin) return callback(null, true);
+      
+      // Allow any vercel.app domain
+      if (origin.endsWith('.vercel.app')) {
+        return callback(null, true);
       }
+      
+      // Allow specific origins
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      
+      callback(new Error("Not allowed by CORS"));
     },
     credentials: true,
     optionsSuccessStatus: 204,
