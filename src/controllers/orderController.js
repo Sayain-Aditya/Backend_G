@@ -71,13 +71,31 @@ exports.placeOrder = async (req, res) => {
 
 exports.updateOrderStatus = async (req, res) => {
   try {
-    const order = await Order.findById(req.params.id);
-    if (!order) return res.status(404).json({ message: "Order not found" });
+    // Only allow admin
+    if (!req.user || req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
 
-    order.status = req.body.status;
-    await order.save();
+    const { status } = req.body;
+    if (!status) {
+      return res.status(400).json({ message: "Status is required" });
+    }
 
-    res.json({ message: "Status updated", order });
+    // Use direct MongoDB update to bypass validation
+    await Order.updateOne(
+      { _id: req.params.id },
+      { $set: { status } }
+    );
+
+    const order = await Order.findById(req.params.id)
+      .populate('user', 'name email')
+      .populate('items.product', 'name price');
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    res.json({ message: "Status updated successfully", order });
   } catch (err) {
     res.status(500).json({ message: "Server error", error: err.message });
   }
