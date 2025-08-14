@@ -38,6 +38,16 @@ const orderSchema = new mongoose.Schema({
     enum: ["pending", "confirmed", "preparing", "shipped", "out_for_delivery", "delivered", "cancelled"],
     default: "pending",
   },
+  deliveryTracking: {
+    driverLocation: {
+      lat: { type: Number },
+      lng: { type: Number }
+    },
+    estimatedDeliveryTime: { type: Date },
+    driverName: { type: String },
+    driverPhone: { type: String },
+    lastUpdated: { type: Date, default: Date.now }
+  },
   createdAt: {
     type: Date,
     default: Date.now,

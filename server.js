@@ -2,9 +2,15 @@ const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const cors = require('cors');
+const http = require('http');
+const { initializeSocket } = require('./src/services/socketService');
 
 dotenv.config();
 const app = express();
+const server = http.createServer(app);
+
+// Initialize Socket.io
+initializeSocket(server);
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
@@ -46,6 +52,7 @@ app.use('/api/users', require('./src/routes/userRoutes'));
 app.use('/api/products', require('./src/routes/productRoutes'));
 app.use('/api/cart', require('./src/routes/cartRoutes'));
 app.use('/api/orders', require('./src/routes/orderRoutes'));
+app.use('/api/delivery', require('./src/routes/deliveryRoutes'));
 
 // MongoDB connection with timeout settings
 mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/grocery', {
@@ -73,7 +80,7 @@ mongoose.connection.on('disconnected', () => {
 // For local development
 const PORT = process.env.PORT || 5000;
 if (process.env.NODE_ENV !== 'production') {
-  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 }
 
 // Export for Vercel
