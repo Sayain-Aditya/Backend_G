@@ -54,12 +54,16 @@ app.use('/api/cart', require('./src/routes/cartRoutes'));
 app.use('/api/orders', require('./src/routes/orderRoutes'));
 app.use('/api/delivery', require('./src/routes/deliveryRoutes'));
 
-// MongoDB connection with timeout settings
+// MongoDB connection optimized for Vercel
 mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/grocery', {
-  serverSelectionTimeoutMS: 30000,
-  socketTimeoutMS: 45000,
-  maxPoolSize: 10,
-  minPoolSize: 5
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 10000,
+  connectTimeoutMS: 10000,
+  maxPoolSize: 5,
+  minPoolSize: 1,
+  maxIdleTimeMS: 30000,
+  bufferCommands: false,
+  bufferMaxEntries: 0
 })
   .then(() => console.log('MongoDB connected'))
   .catch((err) => console.error('MongoDB connection error:', err));
