@@ -97,8 +97,18 @@ exports.loginUser = async (req, res) => {
       return res.status(400).json({ message: "Password must be at least 6 characters" });
     }
 
-    // Find user with timeout protection
-    const user = await User.findOne({ email }).maxTimeMS(10000);
+    // Ensure connection before query
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState !== 1) {
+      await mongoose.connect(process.env.MONGO_URI, {
+        serverSelectionTimeoutMS: 5000,
+        socketTimeoutMS: 45000,
+        family: 4
+      });
+    }
+
+    // Find user
+    const user = await User.findOne({ email });
     if (!user) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
@@ -130,9 +140,6 @@ exports.loginUser = async (req, res) => {
     });
   } catch (err) {
     console.error('Login error:', err);
-    if (err.name === 'MongoTimeoutError') {
-      return res.status(503).json({ message: "Database connection timeout. Please try again." });
-    }
     res.status(500).json({ message: "Server error. Please try again later." });
   }
 };
