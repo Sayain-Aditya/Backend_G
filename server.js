@@ -55,7 +55,11 @@ app.use('/api/orders', require('./src/routes/orderRoutes'));
 app.use('/api/delivery', require('./src/routes/deliveryRoutes'));
 
 // MongoDB connection optimized for Vercel
+let isConnected = false;
+
 const connectDB = async () => {
+  if (isConnected) return;
+  
   try {
     await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/grocery', {
       serverSelectionTimeoutMS: 5000,
@@ -63,15 +67,26 @@ const connectDB = async () => {
       connectTimeoutMS: 10000,
       maxPoolSize: 5,
       minPoolSize: 1,
-      maxIdleTimeMS: 30000
+      maxIdleTimeMS: 30000,
+      bufferCommands: false
     });
+    isConnected = true;
     console.log('MongoDB connected');
   } catch (err) {
     console.error('MongoDB connection error:', err);
+    throw err;
   }
 };
 
-connectDB();
+// Middleware to ensure DB connection
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    res.status(500).json({ error: 'Database connection failed' });
+  }
+});
 
 // Connection event handlers
 mongoose.connection.on('connected', () => {
