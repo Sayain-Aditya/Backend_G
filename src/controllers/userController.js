@@ -119,11 +119,17 @@ exports.loginUser = async (req, res) => {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
-    // Generate JWT token
+    // Generate JWT token with current timestamp
+    const now = Math.floor(Date.now() / 1000);
     const token = jwt.sign(
-      { id: user._id, role: user.role, email: user.email },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
+      { 
+        id: user._id, 
+        role: user.role, 
+        email: user.email,
+        iat: now,
+        exp: now + (7 * 24 * 60 * 60) // 7 days from now
+      },
+      process.env.JWT_SECRET
     );
 
     // Return success response

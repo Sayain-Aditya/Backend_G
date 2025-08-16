@@ -17,7 +17,9 @@ exports.protect = async (req, res, next) => {
   console.log("Token extracted:", token ? "Token exists" : "No token");
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET, {
+      clockTolerance: 60 // Allow 60 seconds clock skew
+    });
     console.log("Token decoded:", decoded);
     
     const user = await User.findById(decoded.id).select("-password");
