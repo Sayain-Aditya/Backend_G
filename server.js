@@ -46,7 +46,7 @@ app.use(express.json());
 
 // Session configuration
 app.use(session({
-  secret: process.env.JWT_SECRET,
+  secret: process.env.SESSION_SECRET || 'grocery_app_super_secure_session_secret_key_2024_vercel_deployment',
   resave: false,
   saveUninitialized: false,
   store: MongoStore.create({
