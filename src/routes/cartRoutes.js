@@ -4,7 +4,8 @@ const {
   addToCart,
   updateCartItem,
   removeFromCart,
-  clearCart
+  clearCart,
+  getRecipeSuggestions
 } = require('../controllers/cartController');
 const { protect } = require('../middleware/authMiddleware');
 
@@ -20,5 +21,7 @@ router.put('/update/:itemId', protect, updateCartItem);
 router.delete('/remove/:itemId', protect, removeFromCart);
 // Route to clear the entire cart
 router.delete('/clear', protect, clearCart);
+// Route to get recipe suggestions based on cart items
+router.get('/recipes', protect, getRecipeSuggestions);
 
 module.exports = router;
