@@ -17,12 +17,15 @@ exports.protect = async (req, res, next) => {
   console.log("Token extracted:", token ? "Token exists" : "No token");
 
   try {
+    console.log('JWT_SECRET exists:', !!process.env.JWT_SECRET);
+    console.log('Token length:', token.length);
+    
     const decoded = jwt.verify(token, process.env.JWT_SECRET, {
-      clockTolerance: 300, // Allow 5 minutes clock skew for Vercel
+      clockTolerance: 300,
       ignoreExpiration: false,
       ignoreNotBefore: false
     });
-    console.log("Token decoded:", decoded);
+    console.log("Token decoded successfully:", { id: decoded.id, role: decoded.role });
     
     const user = await User.findById(decoded.id).select("-password");
     console.log("User found:", user ? user._id : "No user");
@@ -36,8 +39,17 @@ exports.protect = async (req, res, next) => {
     next();
   } catch (err) {
     console.log("Token verification failed:", err.message);
+    console.log("Error name:", err.name);
+    
+    let message = "Invalid or expired token";
+    if (err.name === 'TokenExpiredError') {
+      message = "Token has expired";
+    } else if (err.name === 'JsonWebTokenError') {
+      message = "Invalid token format";
+    }
+    
     return res.status(401).json({
-      message: "Invalid or expired token",
+      message,
       error: process.env.NODE_ENV === "development" ? err.message : undefined,
     });
   }
