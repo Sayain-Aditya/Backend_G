@@ -2,7 +2,6 @@ const express = require("express");
 const {
   registerUser,
   loginUser,
-  logoutUser,
   updateUser,
   getUserProfile,
   getAdminStats,
@@ -23,7 +22,6 @@ const router = express.Router();
 // ✅ PUBLIC ROUTES
 router.post("/register", registerUser);
 router.post("/login", loginUser);
-router.post("/logout", logoutUser);
 
 // ✅ PROTECTED ROUTES
 router.put("/update", protect, updateUser);

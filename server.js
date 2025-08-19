@@ -2,8 +2,6 @@ const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const cors = require('cors');
-const session = require('express-session');
-const MongoStore = require('connect-mongo');
 const http = require('http');
 const { initializeSocket } = require('./src/services/socketService');
 
@@ -43,21 +41,6 @@ app.use(
   })
 );
 app.use(express.json());
-
-// Session configuration
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'grocery_app_super_secure_session_secret_key_2024_vercel_deployment',
-  resave: false,
-  saveUninitialized: false,
-  store: MongoStore.create({
-    mongoUrl: process.env.MONGO_URI
-  }),
-  cookie: {
-    secure: process.env.NODE_ENV === 'production',
-    httpOnly: true,
-    maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
-  }
-}));
 
 // Root route
 app.get('/', (req, res) => {

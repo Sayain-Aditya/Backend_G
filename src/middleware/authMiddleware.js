@@ -1,22 +1,28 @@
+const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 
-// Session-based authentication middleware
+// 🔐 Middleware: Verify and decode token, attach user to req
 exports.protect = async (req, res, next) => {
-  if (!req.session.userId) {
-    return res.status(401).json({ message: "Not authenticated" });
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ message: "No token provided" });
   }
 
+  const token = authHeader.split(" ")[1];
+
   try {
-    const user = await User.findById(req.session.userId).select("-password");
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
+    const user = await User.findById(decoded.id).select("-password");
+
     if (!user) {
-      req.session.destroy();
       return res.status(401).json({ message: "User not found" });
     }
 
     req.user = user;
     next();
   } catch (err) {
-    return res.status(500).json({ message: "Server error" });
+    return res.status(401).json({ message: "Invalid or expired token" });
   }
 };

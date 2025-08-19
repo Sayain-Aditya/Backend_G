@@ -48,6 +48,7 @@ exports.search = async (req, res) => {
 };
 require("dotenv").config();
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 const Order = require('../models/order');
 const Product = require('../models/products');
@@ -78,32 +79,66 @@ exports.registerUser = async (req, res) => {
   }
 };
 
-// Session-based Login
+// ✅ Enhanced Login User
 exports.loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // Input validation
     if (!email || !password) {
       return res.status(400).json({ message: "Email and password are required" });
     }
 
+    if (!email.includes('@')) {
+      return res.status(400).json({ message: "Please enter a valid email address" });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ message: "Password must be at least 6 characters" });
+    }
+
+    // Ensure connection before query
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState !== 1) {
+      await mongoose.connect(process.env.MONGO_URI, {
+        serverSelectionTimeoutMS: 5000,
+        socketTimeoutMS: 45000,
+        family: 4
+      });
+    }
+
+    // Find user
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
+    // Verify password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
-    // Create session
-    req.session.userId = user._id;
-    req.session.userRole = user.role;
+    // Generate JWT token with extended expiry for Vercel
+    const token = jwt.sign(
+      { 
+        id: user._id, 
+        role: user.role, 
+        email: user.email
+      },
+      process.env.JWT_SECRET,
+      { 
+        expiresIn: '30d',
+        notBefore: 0,
+        issuer: 'grocery-app'
+      }
+    );
 
+    // Return success response
     res.json({
       success: true,
       message: "Login successful",
+      token,
       user: {
         id: user._id,
         name: user.name,
@@ -112,19 +147,9 @@ exports.loginUser = async (req, res) => {
       },
     });
   } catch (err) {
-    res.status(500).json({ message: "Server error" });
+    console.error('Login error:', err);
+    res.status(500).json({ message: "Server error. Please try again later." });
   }
-};
-
-// Logout user
-exports.logoutUser = async (req, res) => {
-  req.session.destroy((err) => {
-    if (err) {
-      return res.status(500).json({ message: "Could not log out" });
-    }
-    res.clearCookie('connect.sid');
-    res.json({ message: "Logged out successfully" });
-  });
 };
 
 // ✅ Get logged-in user profile
