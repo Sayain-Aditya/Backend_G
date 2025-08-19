@@ -18,7 +18,9 @@ exports.protect = async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET, {
-      clockTolerance: 60 // Allow 60 seconds clock skew
+      clockTolerance: 300, // Allow 5 minutes clock skew for Vercel
+      ignoreExpiration: false,
+      ignoreNotBefore: false
     });
     console.log("Token decoded:", decoded);
     

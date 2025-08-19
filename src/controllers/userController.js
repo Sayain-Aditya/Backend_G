@@ -119,17 +119,19 @@ exports.loginUser = async (req, res) => {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
-    // Generate JWT token with current timestamp
-    const now = Math.floor(Date.now() / 1000);
+    // Generate JWT token with extended expiry for Vercel
     const token = jwt.sign(
       { 
         id: user._id, 
         role: user.role, 
-        email: user.email,
-        iat: now,
-        exp: now + (7 * 24 * 60 * 60) // 7 days from now
+        email: user.email
       },
-      process.env.JWT_SECRET
+      process.env.JWT_SECRET,
+      { 
+        expiresIn: '30d',
+        notBefore: 0,
+        issuer: 'grocery-app'
+      }
     );
 
     // Return success response
