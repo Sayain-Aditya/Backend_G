@@ -13,7 +13,6 @@ const server = http.createServer(app);
 initializeSocket(server);
 const allowedOrigins = [
   "http://localhost:5173",
-  "http://localhost:3000",
   "https://grocery-bay.vercel.app",
   "https://backend-g-gold.vercel.app"
 ];
@@ -55,13 +54,13 @@ app.use('/api/orders', require('./src/routes/orderRoutes'));
 app.use('/api/delivery', require('./src/routes/deliveryRoutes'));
 
 // MongoDB connection for Vercel serverless
-mongoose.set('bufferCommands', false);
+mongoose.set('bufferCommands', true);
 
 const connectDB = async () => {
   if (mongoose.connection.readyState >= 1) return;
   
   return mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/grocery', {
-    serverSelectionTimeoutMS: 5000,
+    serverSelectionTimeoutMS: 10000,
     socketTimeoutMS: 45000,
     family: 4
   });
