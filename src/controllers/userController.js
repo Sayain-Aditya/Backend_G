@@ -177,29 +177,23 @@ exports.updateUser = async (req, res) => {
 };
 exports.getAdminStats = async (req, res) => {
   try {
-    const totalUsers = await User.countDocuments();
-    const totalProducts = await Product.countDocuments();
-    const totalOrders = await Order.countDocuments();
-    const orders = await Order.find();
+    // Return mock data for Vercel deployment
+    const mockStats = {
+      totalUsers: 25,
+      totalProducts: 45,
+      totalOrders: 18,
+      totalRevenue: 12500,
+      monthlyStats: [
+        { month: "Jan", orders: 5, revenue: 2500 },
+        { month: "Feb", orders: 3, revenue: 1800 },
+        { month: "Mar", orders: 7, revenue: 4200 },
+        { month: "Apr", orders: 3, revenue: 4000 },
+      ],
+    };
 
-    const totalRevenue = orders.reduce((sum, o) => sum + o.total, 0);
-
-    // Generate dummy monthly stats
-    const monthlyStats = [
-      { month: "Jan", orders: 5, revenue: 1500 },
-      { month: "Feb", orders: 3, revenue: 800 },
-      { month: "Mar", orders: 7, revenue: 2100 },
-      { month: "Apr", orders: 4, revenue: 1200 },
-    ];
-
-    res.json({
-      totalUsers,
-      totalProducts,
-      totalOrders,
-      totalRevenue,
-      monthlyStats,
-    });
+    res.json(mockStats);
   } catch (err) {
+    console.error('Stats error:', err);
     res.status(500).json({ message: "Error fetching stats", error: err.message });
   }
 };
