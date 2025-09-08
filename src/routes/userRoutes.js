@@ -23,10 +23,10 @@ const router = express.Router();
 router.post("/register", registerUser);
 router.post("/login", loginUser);
 
-// ✅ ROUTES (No auth for Vercel compatibility)
-router.put("/update", updateUser);
-router.get("/me", getUserProfile);
-router.get('/search', search);
-router.get('/stats', getAdminStats);
+// ✅ PROTECTED ROUTES
+router.put("/update", protect, updateUser);
+router.get("/me", protect, getUserProfile);
+router.get('/search', protect, search);
+router.get('/stats', protect, adminOnly, getAdminStats);
 
 module.exports = router;

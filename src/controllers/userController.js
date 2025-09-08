@@ -160,17 +160,34 @@ exports.logoutUser = async (req, res) => {
 // ✅ Get logged-in user profile
 exports.getUserProfile = async (req, res) => {
   try {
-    // Mock user for now since no auth
-    res.json({ id: "mock", name: "Test User", email: "test@test.com", role: "user" });
+    const user = await User.findById(req.user.id).select("-password");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.json(user);
   } catch (err) {
     res.status(500).json({ message: "Server error", error: err.message });
   }
 };
-// ✅ Update user profile
-// ✅ Update user profile
+
 exports.updateUser = async (req, res) => {
   try {
-    res.json({ message: "User updated successfully" });
+    const { name, email, password, address } = req.body;
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (name) user.name = name;
+    if (email) user.email = email;
+    if (password) {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      user.password = hashedPassword;
+    }
+    if (address) {
+      user.address = { ...user.address, ...address };
+    }
+
+    await user.save();
+    res.json({ message: "User updated successfully", user });
   } catch (err) {
     res.status(500).json({ message: "Server error", error: err.message });
   }

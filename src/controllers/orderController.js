@@ -4,8 +4,7 @@ const { sendInvoiceEmail } = require('../services/emailService');
 
 exports.getAllOrders = async (req, res) => {
   try {
-    // Only allow admin
-    if (!req.user || req.user.role !== 'admin') {
+    if (req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Access denied' });
     }
     const orders = await Order.find().populate('user', 'name email').populate('items.product', 'name price');
@@ -17,7 +16,7 @@ exports.getAllOrders = async (req, res) => {
 
 exports.getMyOrders = async (req, res) => {
   try {
-    const orders = await Order.find({ user: req.user._id }).populate('items.product', 'name price');
+    const orders = await Order.find({ user: req.user.id }).populate('items.product', 'name price');
     res.json(orders);
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch your orders', error: error.message });
@@ -41,38 +40,15 @@ exports.placeOrder = async (req, res) => {
     });
 
     const savedOrder = await order.save();
-    
-    // Populate order with product details for email
-    const populatedOrder = await Order.findById(savedOrder._id)
-      .populate('items.product', 'name price')
-      .populate('user', 'email');
-    
-    // Send invoice email
-    console.log('Order saved, attempting to send email...');
-    console.log('User email:', populatedOrder.user?.email);
-    
-    if (populatedOrder.user?.email) {
-      try {
-        await sendInvoiceEmail(populatedOrder, populatedOrder.user.email);
-        console.log('Email service called successfully');
-      } catch (emailError) {
-        console.error('Email sending failed:', emailError);
-      }
-    } else {
-      console.log('No user email found, skipping email');
-    }
-    
     res.status(201).json({ message: "Order placed", order: savedOrder });
   } catch (err) {
     res.status(500).json({ message: "Server error", error: err.message });
   }
 };
 
-
 exports.updateOrderStatus = async (req, res) => {
   try {
-    // Only allow admin
-    if (!req.user || req.user.role !== 'admin') {
+    if (req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Access denied' });
     }
 
@@ -81,15 +57,11 @@ exports.updateOrderStatus = async (req, res) => {
       return res.status(400).json({ message: "Status is required" });
     }
 
-    // Use direct MongoDB update to bypass validation
-    await Order.updateOne(
-      { _id: req.params.id },
-      { $set: { status } }
-    );
-
-    const order = await Order.findById(req.params.id)
-      .populate('user', 'name email')
-      .populate('items.product', 'name price');
+    const order = await Order.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true }
+    ).populate('user', 'name email').populate('items.product', 'name price');
 
     if (!order) {
       return res.status(404).json({ message: "Order not found" });

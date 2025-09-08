@@ -11,17 +11,17 @@ const router = express.Router();
 
 
 // Order search route
-router.get('/search', searchOrders);
+router.get('/search', protect, searchOrders);
 
 // Place a new order
-router.post('/', placeOrder);
+router.post('/', protect, placeOrder);
 
 // Get all orders (admin only)
-router.get('/', getAllOrders);
+router.get('/', protect, getAllOrders);
 
 // Get logged-in user's order history
-router.get('/my', getMyOrders);
+router.get('/my', protect, getMyOrders);
 // Update order status (admin only)
-router.put('/update/:id/status', updateOrderStatus);
+router.put('/update/:id/status', protect, updateOrderStatus);
 
 module.exports = router;
