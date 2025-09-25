@@ -7,7 +7,7 @@ const productSchema = new mongoose.Schema({
     description: { type: String, required: true },
     image: { type: String },
     stock: { type: Number, required: true, default: 0 },
-    barcode: { type: String, unique: true, sparse: true },
+
 });
 
 module.exports = mongoose.model('Product', productSchema);

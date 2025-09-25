@@ -5,8 +5,7 @@ const {
   getProducts,
   updateProduct,
   deleteProduct,
-  getProductById,
-  getProductByBarcode
+  getProductById
 } = require('../controllers/productController');
 
 const router = express.Router();
@@ -14,7 +13,7 @@ const router = express.Router();
 // Public routes
 router.get('/get', getProducts);
 router.get('/search', require('../controllers/productController').searchProducts);
-router.get('/barcode/:barcode', getProductByBarcode);
+
 router.get('/:id', getProductById);
 
 // Protected routes
